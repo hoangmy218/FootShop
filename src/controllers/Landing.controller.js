@@ -10,7 +10,9 @@ const BinhLuanModel = require('../models/BinhLuan.model');
 const {check, validationResult} = require('express-validator');
 const DanhMucModel = require('../models/DanhMuc.model');
 const ThuongHieuModel = require('../models/ThuongHieu.model');
-
+const HTVC = require('../models/HTVC.model');
+const HTTT = require('../models/HTTT.model');
+const stripe = require('stripe')('sk_test_51HHmGZJ6o6GkwUDly7YZgf0ObwbYQcS6tZ9VJsjimnJmjWejzARPERav14oKpa3CCncCxwiVE9ICXmGVUWszWf4E00zCrtJ4gB');
 exports.sanpham_timkiem = async(request, response)=>{
     var errors = validationResult(request)
     if (!errors.isEmpty()){
@@ -56,14 +58,24 @@ exports.sanpham_list = async(request, response)=>{
         for(var i = 0; i<sanpham.length; i++){
             result[i] = {}
             result[i].sanpham = sanpham[i]
+            var gia = await DonGia.find({sanpham_id: sanpham[i]._id}).sort({ngay: -1}).limit(1).exec();
+            result[i].dongia = gia[0].dongia
             
-            var msp = await MauSanPhamModel.find({sanpham_id: sanpham[i]._id}).populate('mausac_id').populate('hinh[]').exec()
+            var msp = await MauSanPhamModel.find({
+                sanpham_id: sanpham[i]._id
+            })
+            .populate('mausac_id').populate('hinh[]').exec()
             result[i].mausanpham = []
             for (var j =0; j<msp.length; j++){
                 result[i].mausanpham[j] = {}
                 result[i].mausanpham[j].mau = msp[j]
-                var hinh = await HinhAnhModel.findById(msp[j].hinh[0]).exec()
-                result[i].mausanpham[j].hinh = hinh
+                if (msp[j].hinh!= null){
+                    var hinh = await HinhAnhModel.findById(msp[j].hinh[0]).exec()
+                    result[i].mausanpham[j].hinh = hinh
+                
+                }
+                
+                
             }
             console.log('msp',msp)
             //result[i].mau = msp
@@ -74,6 +86,7 @@ exports.sanpham_list = async(request, response)=>{
             result: result
         })
     } catch (error) {
+        console.log(error)
         response.json({
             error: error
         })
@@ -87,7 +100,8 @@ exports.sanpham_details = async(request, response)=>{
         sanpham = await SanPham.findById(ma_sanpham).exec()
             
             var list_procolor = await MauSanPhamModel.find({sanpham_id: ma_sanpham}).populate('mausac_id').populate('hinh[]').exec()
-            var procolor = await MauSanPhamModel.findOne({sanpham_id: ma_sanpham, mausac_id: ma_mausac}).exec()
+            var procolor = await MauSanPhamModel.findOne({sanpham_id: ma_sanpham, mausac_id: ma_mausac})
+            .populate('mausac_id').exec()
             var imgs = procolor.hinh
             var hinh = []
             for (var i=0; i<imgs.length; i++){
@@ -95,7 +109,9 @@ exports.sanpham_details = async(request, response)=>{
 
             }
             
-            var list_size = await ChiTietSanPham.find({mausanpham_id: procolor._id}).exec()
+            var list_size = await ChiTietSanPham.find({mausanpham_id: procolor._id})
+            .populate('kichco_id').exec()
+            var gia = await DonGia.find({sanpham_id: ma_sanpham}).sort({ngay: -1}).limit(1).exec();
             
         
         response.json({
@@ -103,7 +119,8 @@ exports.sanpham_details = async(request, response)=>{
             list_procolor: list_procolor,
             procolor: procolor,
             hinh: hinh,
-            list_size: list_size
+            list_size: list_size,
+            dongia: gia
         })
     } catch (error) {
         response.json({
@@ -162,4 +179,74 @@ exports.thuonghieu_list = async(request, response)=>{
             error: error
         })
     }
+}
+
+exports.soluong_get = async(request, response)=>{
+    try{
+        var sl = await ChiTietSanPham.findById(request.params.id).exec();
+        response.json({
+            data: sl
+        })
+    }catch (error){
+        response.json({
+            error: error
+        })
+    }
+}
+
+exports.htvc_get = async(request, response)=>{
+    try{
+        var sl = await HTVC.find().exec();
+        response.json({
+            data: sl
+        })
+    }catch (error){
+        response.json({
+            error: error
+        })
+    }
+}
+
+exports.htvc_details = async(request, response)=>{
+    try{
+        var sl = await HTVC.findById(request.params.id).exec();
+        response.json({
+            data: sl
+        })
+    }catch (error){
+        response.json({
+            error: error
+        })
+    }
+}
+exports.httt_get = async(request, response)=>{
+    try{
+        var sl = await HTTT.find().exec();
+        response.json({
+            data: sl
+        })
+    }catch (error){
+        response.json({
+            error: error
+        })
+    }
+}
+
+exports.stripePost = async(request, response)=>{
+    var total = Math.round(Math.round(request.body.total,2)*100);
+    stripe.charges.create({
+        amount: total,
+        currency:'USD',
+        description: 'One-time setup fee',
+        source: request.body.token
+    }, (error, charge)=>{
+        if (error){
+            next(error);
+        }
+        response.json({
+            success: true,
+            message: 'Thanh toán thành công'
+        });
+    })
+    console.log(request.body)
 }

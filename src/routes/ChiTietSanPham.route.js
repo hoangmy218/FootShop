@@ -12,5 +12,5 @@ router.get('/list', auth, chitietsanpham_controller.chitietsanpham_list);
 router.get('/get/:id', auth, chitietsanpham_controller.chitietsanpham_get);
 router.put('/update/:id', auth, chitietsanpham_controller.chitietsanpham_update);
 router.delete('/del/:id', auth, chitietsanpham_controller.chitietsanpham_delete);
-
+router.post('/:id/add-list-size', auth, chitietsanpham_controller.chitietsanpham_create_arr);
 module.exports = router;

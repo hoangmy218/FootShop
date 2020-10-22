@@ -49,6 +49,36 @@ exports.mausac_list = async(request, response) =>{
     }
 };
 
+//List nhung mau sac ma sp chua co
+exports.mausac_productlist = async(request, response) =>{
+    try {
+        var mausac_list = [];
+        var sanpham_id = request.params.id;
+        var result = await MauSac.find().exec();
+        console.log('ms', result)
+        var k = 0;
+        for(var i = 0; i<result.length; i++){
+            console.log('res i', i, result[i])
+            var msp = await MauSanPhamModel.find({
+                sanpham_id: sanpham_id, mausac_id: result[i]._id}).exec();
+                console.log('msp',i,msp)
+            if (msp.length==0){
+                console.log('push', mausac_list,i, result[i])
+                mausac_list.push(result[i])
+                // mausac_list[k]=result[i];
+                // k++;
+            }
+            console.log('msl',mausac_list)
+        }
+        
+        response.json({
+            data: mausac_list
+        });
+    } catch (error){
+        response.status(500).send(error);
+    }
+};
+
 exports.mausac_get = async(request, response)=>{
     try{
         var result = await MauSac.findById(request.params.id).exec();
@@ -175,3 +205,4 @@ exports.mausac_delete = async(request, response)=>{
         response.send(error);
     }
 }
+

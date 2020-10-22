@@ -18,6 +18,8 @@ router.delete('/clear', auth, GioHang_controller.giohang_clear);
 router.get('/list', auth, GioHang_controller.giohang_list);
 //Submit cart
 
+router.get('/shortlist', auth, GioHang_controller.giohang_shortlist);
+
 
 
 

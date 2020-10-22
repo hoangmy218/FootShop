@@ -18,6 +18,7 @@ router.post('/:id/create', auth, phieunhap_controller.chitietphieunhap_create);
 router.get('/:id/list',  auth,phieunhap_controller.chitietphieunhap_list);
 router.delete('/chitiet/del/:id', auth, phieunhap_controller.chitietphieunhap_delete);
 router.put('/chitiet/update/:id', auth, phieunhap_controller.chitietphieunhap_update);
-
-
+//add pro color size 
+router.post('/:id/add', auth, phieunhap_controller.chitietphieunhap_create_pcs);
+router.post('/:id/add-list-pro', auth, phieunhap_controller.chitietphieunhap_create_arr);
 module.exports = router;

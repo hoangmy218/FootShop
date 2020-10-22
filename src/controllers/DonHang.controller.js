@@ -24,13 +24,16 @@ exports.donhang_create = async(request, response)=>{
             thanhtoan_id: request.body.thanhtoan_id,
             vanchuyen_id: request.body.vanchuyen_id
         });
+        console.log(request.body)
+        console.log(donhang)
         var dh = await donhang.save();
+        console.log(dh)
         var donhang_moi = await DonHang.findById(dh._id).exec();
         var ma_donhang = dh._id;
         //GET SANPHAM - 1 
         var sanpham = request.body.sanpham;
         //GET CART - 2
-        var sanpham = await GioHangModel.find({nguoidung_id: request.user._id}).exec()
+        var sanpham = await GioHang.find({nguoidung_id: request.user._id}).exec()
 
         var tongtien = 0;
         var khuyenmai = 0;
@@ -55,11 +58,16 @@ exports.donhang_create = async(request, response)=>{
         
                     //CHECK DISCOUNT
                     var sp = await SanPham.findById(ma_sanpham).populate('khuyenmai_id').exec();
-                    var ngaykt = sp.khuyenmai_id.ngaykt;
-                    var ngayht = Date.now();
-                    if (parseInt((ngaykt-ngayht)/ (1000 * 60 * 60 * 24)) >= 0){
-                        khuyenmai += thanhtien * sp.khuyenmai_id.giamgia / 100;
+                    console.log(sp)
+
+                    if (sp.khuyenmai_id != null){
+                        var ngaykt = sp.khuyenmai_id.ngaykt;
+                        var ngayht = Date.now();
+                        if (parseInt((ngaykt-ngayht)/ (1000 * 60 * 60 * 24)) >= 0){
+                            khuyenmai += thanhtien * sp.khuyenmai_id.giamgia / 100;
+                        }
                     }
+                    
                     
                     //THEM CTDH
                     var ctdh = new ChiTietDonHang({
@@ -68,8 +76,12 @@ exports.donhang_create = async(request, response)=>{
                         soluongdat: soluongdat,
                         dongia: dongia
                     });
-                    var sanpham = await ChiTietSanPham.update({_id: sanpham[i].ctsp_id}, {$set: {soluong: ctsp[i].soluong - soluongdat }})
+                    console.log('ctdh', ctdh)
+                    console.log('sp i', sanpham[i])
+                    console.log('ctsdp i', ctsp)
+                    var sanpham = await ChiTietSanPham.update({_id: sanpham[i].ctsp_id}, {$set: {soluong: ctsp.soluong - soluongdat }})
                     var ctdh_moi = await ctdh.save();
+                    console.log(ctdh_moi)
                 } 
             }
             
@@ -97,7 +109,11 @@ exports.donhang_create = async(request, response)=>{
         await GioHang.deleteMany({nguoidung_id: request.user._id}).exec()
 
     } catch (error){
-        response.send(error);
+        console.log(error)
+        response.json({
+            message: error
+        });
+       
     }
 };
 
@@ -119,7 +135,7 @@ exports.donhang_list = async(request, response)=>{
     try {
         
         const result = await DonHang.find().sort({ngaydat: -1})
-            .populate('nguoidung_id').populate('thanhtoan_id').populate('vanchuyen_id').exec();
+            .populate('nguoidung_id').populate('thanhtoan_id').populate('vanchuyen_id').populate('diachi_id').exec();
         response.json({
             data: result
         });
@@ -220,9 +236,10 @@ exports.donhang_get = async(request, response)=>{
     try{
         var ma_donhang = request.params.id;
         const result = await DonHang.findById(ma_donhang)
-            .populate('nguoidung_id').populate('thanhtoan_id').populate('vanchuyen_id')
+            .populate('nguoidung_id').populate('thanhtoan_id').populate('vanchuyen_id').populate('diachi_id')
             .exec();
         const chitiet = await ChiTietDonHang.find({donhang_id: request.params.id})
+            
             .populate({
                 path: 'ctsp_id',
                 populate:[

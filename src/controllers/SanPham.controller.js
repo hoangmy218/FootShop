@@ -25,7 +25,9 @@ exports.sanpham_create = async(request, response)=>{
                 
                 const result = await SanPham.findById(res.id).populate('thuonghieu_id').populate('danhmuc_id').exec();
                 response.json({
-                    data: result
+                    data: result,
+                    success: true,
+                    message: 'Product added successfully'
                 });
                     
             }
@@ -40,7 +42,7 @@ exports.sanpham_create = async(request, response)=>{
 exports.sanpham_list = async(request, response) =>{
     try {
         
-        const result = await SanPham.find().populate('thuonghieu_id').populate('danhmuc_id').exec();
+        const result = await SanPham.find().sort({_id: -1}).populate('thuonghieu_id').populate('danhmuc_id').exec();
 
         response.json({
             data: result
@@ -55,10 +57,12 @@ exports.sanpham_list = async(request, response) =>{
 exports.sanpham_get = async(request, response)=>{
     try{
         const result = await SanPham.findById(request.params.id).populate('thuonghieu_id').populate('danhmuc_id').exec();
+        const short = await SanPham.findById(request.params.id).exec();
         if (result){
             
             response.json({
-                data: result
+                data: result,
+                shortdata: short
             });
         } else{
             response.json({

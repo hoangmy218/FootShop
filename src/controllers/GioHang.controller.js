@@ -7,6 +7,7 @@ const SanPham = require('../models/SanPham.model');
 const {check, validationResult} = require('express-validator');
 
 exports.giohang_create = async(request, response)=>{
+    console.log(request.body)
     var errors = validationResult(request)
     if (!errors.isEmpty()){
         response.json({
@@ -40,6 +41,7 @@ exports.giohang_create = async(request, response)=>{
                             ctsp_id: request.body.ctsp_id,
                             soluongdat: request.body.soluongdat
                         })
+                        
                         
                         var gh = await giohang_moi.save();
                         response.json({
@@ -218,9 +220,60 @@ exports.giohang_list = async(request, response)=>{
                 await GioHang.deleteOne({ _id: sanpham[i]._id}).exec()
             }
         }
+        var result = {}
         var giohang = await GioHang.find(
             {nguoidung_id: request.user._id}
-            ).exec();
+            ).populate({
+                path: 'ctsp_id',
+                populate: [
+                    {path: 'kichco_id'},
+                    {
+                    path: 'mausanpham_id',
+                    populate: [{path: 'mausac_id'}, {path: 'sanpham_id'}]
+                }]
+            
+            })
+            .exec();
+       
+        result.giohang = giohang;
+        var gia = [];
+        var pricelist = [];
+        var k =0;
+        for(var j = 0; j<giohang.length; j++){
+            var dongia = await DonGia.find({sanpham_id: giohang[j].ctsp_id.mausanpham_id.sanpham_id._id})
+            .sort({ngay: -1}).limit(1).exec();
+           
+            gia[j] = dongia[0];
+            
+        }
+        var newArr = [];
+        gia.forEach((item, i)=> {
+            console.log(item)
+            if (newArr.findIndex(index => index._id === item._id) === -1) 
+            {
+                console.log(item)
+                newArr.push(item)
+            }
+
+        });
+        // this.formulalist = this.newArr
+        result.dongia = gia;
+        
+        response.json({
+            data: giohang,
+            result: result
+        })
+    } catch (error) {
+        response.json({
+            success: false,
+            error: error
+        })
+    }
+}
+
+exports.giohang_shortlist = async(request, response)=>{
+    try {
+        var giohang  = await GioHang.find({nguoidung_id: request.user._id}).exec();
         response.json({
             data: giohang
         })

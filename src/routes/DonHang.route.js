@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth')
+const auth = require('../middleware/auth');
 // Require the controllers WHICH WE DID NOT CREATE YET!!
 const donhang_controller = require('../controllers/DonHang.controller');
 const { validate } = require('../validator');

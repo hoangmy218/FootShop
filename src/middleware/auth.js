@@ -4,11 +4,15 @@ const NguoiDung = require('../models/NguoiDung.model')
 const role = require('./role')
 
 const auth = async(request, response, next)=> {
-    const token = request.header('Authorization').replace('Bearer ', '')
-    console.log('token', token.length)
-    if (token == "Bearer") return response.status(401).send({
-        success: false,
-        error: 'Access Denied'});
+    // console.log(request.header('Authorization'))
+    const token = request.header('Authorization').replace('Bearer ', '');
+    // console.log(token)
+    // console.log('token', token.length)
+    if (token == "Bearer") 
+        return response.status(401).send({
+            success: false,
+            error: 'Access Denied'
+        });
     const data = jwt.verify(token, process.env.JWT_KEY)
     try {
         

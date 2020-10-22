@@ -12,8 +12,14 @@ exports.diachi_create = async(request, response)=>{
         })
     }else {
         try {
-        
-            var diachi = new DiaChi(request.body);
+            
+            var diachi = new DiaChi({
+                nguoidung_id: request.user._id,
+                ten: request.body.ten,
+                dienthoai: request.body.dienthoai,
+                diachi: request.body.diachi,
+                macdinh: false
+            });
             var result = await diachi.save();
             response.json({
                 success: true,
@@ -31,7 +37,7 @@ exports.diachi_create = async(request, response)=>{
 
 exports.diachi_list = async(request, response) =>{
     try {
-        var result = await DiaChi.find().sort({_id: -1}).exec();
+        var result = await DiaChi.find({nguoidung_id: request.user._id}).sort({_id: -1}).exec();
         response.json({
             data: result
         });

@@ -13,5 +13,5 @@ router.get('/list', auth, mausac_controller.mausac_list);
 router.get('/get/:id', auth,  mausac_controller.mausac_get);
 router.put('/update/:id', auth, validate.validateMauSac(), mausac_controller.mausac_update);
 router.delete('/del/:id', auth,  mausac_controller.mausac_delete);
-
+router.get('/:id/list', auth, mausac_controller.mausac_productlist);
 module.exports = router;
